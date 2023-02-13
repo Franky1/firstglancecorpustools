@@ -1,42 +1,35 @@
 """
 Description
 Training app for intro to corpus linguistics
-
-
 """
-# Core Pkgs
-import streamlit as st
-import os
-from operator import itemgetter
+import sys
+from io import StringIO
 
-# NLP Pkgs
-import spacy
-from spacy import displacy
 import nltk
-nltk.download('punkt')
+import requests
+import spacy
+import streamlit as st
 from nltk.tokenize import TreebankWordTokenizer as twt
 from nltk.util import ngrams
-
-#dealing with NLTk std.out
-from io import StringIO
-import sys
-
-# GIF support
 from streamlit_lottie import st_lottie
-from streamlit_lottie import st_lottie_spinner
-import requests
 
+
+@st.cache_resource
+def nltk_download(*args):
+	for arg in args:
+		nltk.download(arg)
+
+
+@st.cache_resource
 def load_lottieurl(url: str):
 	r = requests.get(url)
 	if r.status_code != 200:
-		return none
+		return None
 	return r.json()
 
 
-# Set tabs up
-tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(["Concordancer", "Frequencies", "POS Tagging", "Name Entity Recognition", "Keywords", "Collocations and N-grams"])
-
 # Function for frequency list TAB0
+@st.cache_data
 def concordancer(corpus, searchTerm):
 	tmp = sys.stdout
 	my_result = StringIO()
@@ -49,13 +42,15 @@ def concordancer(corpus, searchTerm):
 
 
 # Function for frequency list TAB1
+@st.cache_data
 def get_freqy(my_text):
 	my_text = my_text.lower()
 	tokens = nltk.word_tokenize(my_text)
 	freqDist = nltk.FreqDist(tokens)
 	return freqDist.most_common(50)
 
-@st.cache_resource
+
+@st.cache_data
 def text_analyzer(my_text):
 	nlp = spacy.load('en_core_web_sm')
 	docx = nlp(my_text)
@@ -63,15 +58,18 @@ def text_analyzer(my_text):
 	allData = [('"Token":{},\n"Lemma":{}'.format(token.text,token.lemma_))for token in docx ]
 	return allData
 
+
 # Function for POS visualization TAB2
+@st.cache_data
 def get_pos(text):
 	# Tokenize text and pos tag each token
 	tokens = twt().tokenize(text)
 	tags = nltk.pos_tag(tokens, tagset = "universal")
 	return tags
 
+
 # Function For Extracting Entities TAB3
-@st.cache_resource
+@st.cache_data
 def entity_analyzer(my_text):
 	nlp = spacy.load('en_core_web_sm')
 	docx = nlp(my_text)
@@ -89,16 +87,26 @@ def ngram_analyzer(my_text, num):
 	return [ ' '.join(grams) for grams in n_grams]
 
 
+# pre-load nltk packages
+nltk_download("punkt", "averaged_perceptron_tagger", "universal_tagset")
+
+
 def main():
 	""" web interface """
+	# Set tabs up
+	tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(["Concordancer", "Frequencies", "POS Tagging", "Name Entity Recognition", "Keywords", "Collocations and N-grams"])
 
-	# Title
+	# Sidebar
 	with st.sidebar:
 		computer = load_lottieurl("https://assets6.lottiefiles.com/packages/lf20_mymcy4zr.json")
 		st_lottie(computer)
-	
-	st.sidebar.title("A First Glance at Corpus Methods")
-	st.sidebar.subheader("A sampler of different corpus linguistic approaches to text")
+		st.title("A First Glance at Corpus Methods")
+		st.subheader("A sampler of different corpus linguistic approaches to text")
+		st.subheader("About the App")
+		st.info("This is a training app intended to introduce you to the basics of corpus linguistics. Use your own choice of text to see how the different methods work in practice!")
+		st.subheader("Contact")
+		st.text("Daniel Ihrmark")
+		st.text("(daniel.o.sundberg@lnu.se)")
 
 	# Concordancer
 	with tab0:
@@ -169,7 +177,7 @@ def main():
 		st.info("'We should know a word by the company it keeps' is one of those quotes every linguistics student will hear from a lecturer at least once during their studies. The reason for this is that the context of a word is very important for formulating our understanding of it. From a corpus linguistics perspective we can look for words that often appear together in text in order to get an idea of the word groups in our specific text. If this seems dull, ask your teacher about connotation!")
 		st.info("N-grams are simply groups of words defined by the number of words included. This tool allows us to look for bigrams (2 words), trigrams (3 words), and quadgrams(4 words).")
 		message = st.text_area("Enter Text","Type Here.......")
-		
+
 		if st.button("Get Bigrams"):
 			st.text("Using NLTK N-gram Extractor...")
 			results = ngram_analyzer(message, 2)
@@ -182,14 +190,6 @@ def main():
 			st.text("Using NLTK N-gram Extractor...")
 			results = ngram_analyzer(message, 4)
 			st.json(results)
-
-	st.sidebar.subheader("About the App")
-	st.sidebar.info("This is a training app intended to introduce you to the basics of corpus linguistics. Use your own choice of text to see how the different methods work in practice!")
-	st.sidebar.subheader("Contact")
-	st.sidebar.text("Daniel Ihrmark")
-	st.sidebar.text("(daniel.o.sundberg@lnu.se)")
-
-
 
 
 if __name__ == '__main__':
