@@ -4,4 +4,3 @@ spacy==3.5.0
 streamlit==1.18.1
 streamlit_lottie==0.0.3
 spacy==3.5.0
-streamlit==1.17.0
