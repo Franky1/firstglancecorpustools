@@ -1,0 +1,8 @@
+treamlit
+import
+spacy
+nltk
+io
+sys
+streamlit_lottie
+requests
