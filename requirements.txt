@@ -1,5 +1,4 @@
-treamlit
-import
+streamlit
 spacy
 nltk
 sys
